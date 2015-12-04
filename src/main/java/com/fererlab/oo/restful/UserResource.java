@@ -1,10 +1,12 @@
 package com.fererlab.oo.restful;
 
 
+import com.fererlab.oo.commons.model.ModelBuilder;
 import com.fererlab.oo.commons.restful.AbstractResource;
 import com.fererlab.oo.commons.restful.EntityManagerAwareInterceptor;
 import com.fererlab.oo.model.User;
 
+import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.interceptor.Interceptors;
@@ -19,22 +21,15 @@ import java.util.Random;
 @Interceptors({EntityManagerAwareInterceptor.class})
 public class UserResource extends AbstractResource<User> {
 
-    @Override
-    public Class<User> getEntityClass() {
-        return User.class;
-    }
-
     @GET
     @Path("/findTest/{id}")
     public User findTest(@PathParam("id") Integer id) throws Exception {
-        User user = BuildModel();
+        User user = build();
         user.setId(id);
         user.find();
-        System.out.println("user = " + user);
 
         user.setUsername("guest" + (new Random().nextDouble()));
         user.update();
-        System.out.println("user = " + user);
 
         return user;
     }
@@ -42,8 +37,7 @@ public class UserResource extends AbstractResource<User> {
     @GET
     @Path("/testNewModel/{id}")
     public User testNewModel(@PathParam("id") Integer id) throws Exception {
-        User user = new User();
-        user.setEntityManager(getEntityManager());
+        User user = build();
         user.setId(id);
         user.find();
         System.out.println("user = " + user);
@@ -55,4 +49,11 @@ public class UserResource extends AbstractResource<User> {
         return user;
     }
 
+    @EJB(beanName = "ModelBuilder")
+    private ModelBuilder modelBuilder;
+
+    @Override
+    protected User build() throws Exception {
+        return modelBuilder.build(User.class);
+    }
 }
